@@ -84,6 +84,7 @@ bot.on('message', async message =>{
     }
 
     if (!activity) { return };
+    
     if(message.author.id == bot.user.id) return;
     if(!message.content.startsWith(prefix)) return;
 
@@ -156,6 +157,25 @@ const execute = async (message, serverQueue) => {
     let embed;
     let isPlaylist = false;
 
+    let voiceChannel = message.member.voice.channel;
+    if(!voiceChannel) message.channel.send('Enter voice channel');
+    if(!params) { message.channel.send('Enter YouTube URL'); return }
+    let song;
+    let playlistName;
+
+    let queueContruct = {
+        textChannel: message.channel,
+        voiceChannel: voiceChannel,
+        connection: null,
+        songs: [],
+        volume: 5,
+        playing: true,
+        loopTrack: false,
+        paused: false,
+        bassBoost: false,
+        queued: false,
+    };
+
     if (SoundCloudUtil.validateURL(params) && !params.includes("/sets/")) {
         songInfo = await client.getSongInfo(params).catch(e => { console.error(`Track parse error: ${e}`); });
         if (!songInfo) return message.channel.send('Nothing found');
@@ -177,28 +197,9 @@ const execute = async (message, serverQueue) => {
         });
         url = linkYT[0];
         if(ytResult.length == 0){
-            return message.channel.send('Ничего не найдено');
+            url = '';
         }
     }
-
-    let voiceChannel = message.member.voice.channel;
-    if(!voiceChannel) message.channel.send('Enter voice channel');
-    if(!params) { message.channel.send('Enter YouTube URL'); return }
-    let song;
-    let playlistName;
-
-    let queueContruct = {
-        textChannel: message.channel,
-        voiceChannel: voiceChannel,
-        connection: null,
-        songs: [],
-        volume: 5,
-        playing: true,
-        loopTrack: false,
-        paused: false,
-        bassBoost: false,
-        queued: false,
-    };
 
     if (playlistPattern.test(params)) {
 
@@ -207,6 +208,7 @@ const execute = async (message, serverQueue) => {
 
         playlist = await youtube.getPlaylist(url, { part: "snippet" });
         videos = await playlist.getVideos(50, { part: "snippet" });
+
         playlistName = playlist.raw.snippet.title;
 
         let newSongs = videos
@@ -240,11 +242,13 @@ const execute = async (message, serverQueue) => {
         playlist = await scdl.getSetInfo(params, SCID);
         playlistName = playlist.title;
 
-        videos = playlist.tracks.map((track) => ({
-            title: track.title,
-            url: track.permalink_url,
-            duration: track.duration / 1000
-        }));
+        videos = playlist.tracks.map((track) => {
+            let dur = Math.ceil(track.duration / 1000);
+            return {
+                title: track.title,
+                url: track.permalink_url,
+                durationSeconds: dur
+        }});
 
         let newSongs = videos
             .filter((video) => video.title != "Private video" && video.title != "Deleted video")
@@ -258,7 +262,6 @@ const execute = async (message, serverQueue) => {
                     playlist: playlistName
                 });
             });
-        console.log(newSongs);
         if (serverQueue) { serverQueue.songs.push(...newSongs) } else { queueContruct.songs.push(...newSongs); }
         embed = new Discord.MessageEmbed()
         .setTitle('Added playlist')
@@ -473,22 +476,23 @@ const time = (message, serverQueue) => {
     if (!message.member.voice.channel) return message.channel.send('Enter voice channel');
     if (!serverQueue || serverQueue.song == []) return message.channel.send('Zero songs');
 
-    let totalTimeSec;
+    let totalTimeSec = 0;
     for (let i = 0; i < serverQueue.songs.length; i++) {
-        totalTimeSec += parseInt(serverQueue.songs[i].time);
+        totalTimeSec += parseInt(serverQueue.songs[i].time, 10);
     }
 
     let time = ``;
     let timeMins = Math.floor(totalTimeSec / 60);
-    let timeHours = Math.floor(totalTimeSec / 60);
+    let timeHours = Math.floor(timeMins / 60);
     let timeSec = totalTimeSec - timeMins * 60;
+    if (timeHours >= 1) { timeMins = timeMins - timeHours * 60} 
     if (timeSec < 10) { timeSec = '0' + String(timeSec) }
     if (timeHours <= 0) { time = `${timeMins}:${timeSec}` } else { 
         if (timeMins < 10) { timeMins = '0' + String(timeMins) }
-        time = `${timeHours}:${timeMins}:${timeSec}` 
+        time = `${timeHours}:${timeMins}:${timeSec}`
     }
     
-    message.channel.send(time);
+    return message.channel.send(time);
 }
 
 const skip = (message, serverQueue) => {
