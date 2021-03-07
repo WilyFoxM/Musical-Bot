@@ -632,7 +632,8 @@ const queueCommand = (message, serverQueue) => {
         let embed = new Discord.MessageEmbed()
             .setColor('#c0ffee')
             .setDescription('```' + str + '```')
-        message.channel.send(embed)
+        message.channel.send(embed);
+        serverQueue.queued = false;
     }
 }
 
