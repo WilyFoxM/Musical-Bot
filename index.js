@@ -471,7 +471,7 @@ const skipto = (message, serverQueue) => {
     let to = serverQueue.songs[dest];
 
     serverQueue.songs.push(current);
-    serverQueue.songs[0] = to;
+    serverQueue.songs[1] = to;
     serverQueue.songs.slice(dest);
 
     if (serverQueue.connection.dispatcher) {
