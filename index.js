@@ -456,7 +456,7 @@ const play = async (guild, song) => {
 
 const time = (message, serverQueue) => {
     if (!message.member.voice.channel) return message.channel.send('Enter voice channel');
-    if (!serverQueue || serverQueue.song == []) return message.channel.send('Nothing to skip');
+    if (!serverQueue || serverQueue.song == []) return message.channel.send('Zero songs');
 
     let totalTimeSec;
     for (let i = 0; i < serverQueue.songs.length; i++) {
