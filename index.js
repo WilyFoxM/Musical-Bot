@@ -146,6 +146,7 @@ const execute = async (message, serverQueue) => {
             type: 'video'
         };
         let results = await search(params, opts1).catch(err => console.log(err, 'AAAaaaaAAAAAAAAAAAaaaaaaaaaaa'));
+        if (!results) { return message.channel.send('Cant play this song'); }
         let ytResult = results.results;
         let linkYT = ytResult.map(result =>{
             return result.link;
