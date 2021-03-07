@@ -100,6 +100,10 @@ bot.on('message', async message =>{
         pause(message, serverQueue);
         return;
     }
+    if(message.content.startsWith(prefix + 'skipto') || message.content.startsWith(prefix + 'to')) {
+        skipto(message, serverQueue);
+        return;
+    }
 
     // Spotify test
     if(message.content.startsWith(prefix + 'test')) {
@@ -131,6 +135,7 @@ const execute = async (message, serverQueue) => {
     let songInfo;
     let isYT = false;
     let embed;
+    let isPlaylist = false;
 
     if (SoundCloudUtil.validateURL(params) && !params.includes("/sets/")) {
         songInfo = await client.getSongInfo(params).catch(e => { console.error(`Track parse error: ${e}`); });
@@ -172,7 +177,8 @@ const execute = async (message, serverQueue) => {
         playing: true,
         loopTrack: false,
         paused: false,
-        bassBoost: false
+        bassBoost: false,
+        queued: false,
     };
 
     if (playlistPattern.test(params)) {
@@ -206,6 +212,7 @@ const execute = async (message, serverQueue) => {
             { name: 'Tracks', value: newSongs.length }
         )
         message.channel.send(embed);
+        isPlaylist = true;
 
     } else if (params.includes("/sets/")) {
         let playlist = null;
@@ -242,6 +249,7 @@ const execute = async (message, serverQueue) => {
             { name: 'Tracks', value: newSongs.length }
         )
         message.channel.send(embed);
+        isPlaylist = true;
 
     } else {
         if (isYT) {
@@ -297,8 +305,8 @@ const execute = async (message, serverQueue) => {
             time = `${timecodemin}:${timecodesec}`;
         }
         if (!playlistPattern.test(params)) {
-            console.log(playlistPattern.test(params));
-            embed = new Discord.MessageEmbed()
+            if (!isPlaylist) {
+                embed = new Discord.MessageEmbed()
                 .setColor("#ed1532")
                 .setThumbnail(song.thumb)
                 .setTitle(`Added to queue:`)
@@ -308,8 +316,8 @@ const execute = async (message, serverQueue) => {
                     { name: 'Time', value: time }
                 )
                 .setURL(`${song.url}`);
+            }
         }
-        
         message.channel.send(embed);
     }
 }
@@ -453,6 +461,26 @@ const skip = (message, serverQueue) => {
     }
 }
 
+const skipto = (message, serverQueue) => {
+    if (!message.member.voice.channel) return message.channel.send('Enter voice channel');
+    if (!serverQueue || serverQueue.song == []) return message.channel.send('Nothing to skip');
+    let dest = Number(Math.abs(Math.floor(message.content.split(' ')[1]))) + 1;
+    if (dest <= 0 || dest > serverQueue.songs.length) { return message.channel.send('Incorrect pointer'); }
+
+    let current = serverQueue.songs[0];
+    let to = serverQueue.songs[dest];
+
+    serverQueue.songs.push(current);
+    serverQueue.songs[0] = to;
+    serverQueue.songs.slice(dest);
+
+    if (serverQueue.connection.dispatcher) {
+        serverQueue.connection.dispatcher.end();
+    } else {
+        play(serverQueue.songs[0]);
+    }
+}
+
 const bassboost = (message, serverQueue) => {
     if (!message.member.voice.channel) return message.channel.send('Enter voice channel');
     if (!serverQueue || serverQueue.song == []) return message.channel.send('Nothing to skip');
@@ -463,6 +491,10 @@ const bassboost = (message, serverQueue) => {
 const pause = (message, serverQueue) => {
     if (!message.member.voice.channel) return message.channel.send('Enter voice channel');
     if (!serverQueue || serverQueue.song == []) return message.channel.send('Nothing to pause');
+    if (!serverQueue.connection.dispatcher) {
+        serverQueue.songs.shift();
+        play(serverQueue.songs[0]);
+    }
     if (serverQueue.paused) {
         serverQueue.connection.dispatcher.resume();
         serverQueue.paused = false;
@@ -478,7 +510,9 @@ const pause = (message, serverQueue) => {
 const queueCommand = (message, serverQueue) => {
     if (!message.member.voice.channel) return message.channel.send('Enter voice channel');
     if (!serverQueue || serverQueue.song == []) return message.channel.send('Nothing to see');
-    console.log('queue');
+    if(serverQueue.queued) { return };
+
+    serverQueue.queued = true;
 
     let id = message.author.id;
     let str = '';
@@ -513,6 +547,7 @@ const queueCommand = (message, serverQueue) => {
 
             collector.on('collect', async (reaction, user) => {
                 if(reaction.emoji.name == '❌') {
+                    serverQueue.queued = false;
                     try{
                         message.delete();
                     } catch(e) {}
