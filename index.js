@@ -464,7 +464,7 @@ const skip = (message, serverQueue) => {
 const skipto = (message, serverQueue) => {
     if (!message.member.voice.channel) return message.channel.send('Enter voice channel');
     if (!serverQueue || serverQueue.song == []) return message.channel.send('Nothing to skip');
-    let dest = Number(Math.abs(Math.floor(message.content.split(' ')[1]))) + 1;
+    let dest = Number(Math.abs(Math.floor(message.content.split(' ')[1]))) - 1;
     if (dest <= 0 || dest > serverQueue.songs.length) { return message.channel.send('Incorrect pointer'); }
 
     let current = serverQueue.songs[0];
