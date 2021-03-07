@@ -142,7 +142,7 @@ const execute = async (message, serverQueue) => {
         isYT = true;
         let opts1 = {
             maxResults: 1,
-            key: 'AIzaSyCYJnOa_DmV_n74WwG8RnNHH3bMZFyUN6k',
+            key: YTAPI,
             type: 'video'
         };
         let results = await search(params, opts1).catch(err => console.log(err, 'AAAaaaaAAAAAAAAAAAaaaaaaaaaaa'));
