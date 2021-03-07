@@ -56,6 +56,8 @@ const { Util } = require('discord.js');
 // Servers Queue
 let queue = new Map();
 
+let activity = true;
+
 // On start
 bot.on('ready', () => {
     console.log(`Music bot logged ${bot.user.username}`);
@@ -69,6 +71,19 @@ bot.on('ready', () => {
 // On message
 bot.on('message', async message =>{
     // Protect
+
+    if (message.content == prefix + 'active') {
+        if (message.author.id == '208583885666254849') {
+            activity = true;
+        }
+    }
+    if (message.content == prefix + 'deactive') {
+        if (message.author.id == '208583885666254849') {
+            activity = false;
+        }
+    }
+
+    if (!activity) { return };
     if(message.author.id == bot.user.id) return;
     if(!message.content.startsWith(prefix)) return;
 
