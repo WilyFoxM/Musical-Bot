@@ -104,6 +104,10 @@ bot.on('message', async message =>{
         skipto(message, serverQueue);
         return;
     }
+    if(message.content.startsWith(prefix + 'time') || message.content.startsWith(prefix + 'long')) {
+        time(message, serverQueue);
+        return;
+    }
 
     // Spotify test
     if(message.content.startsWith(prefix + 'test')) {
@@ -448,6 +452,27 @@ const play = async (guild, song) => {
             dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
         }
     }
+}
+
+const time = (message, serverQueue) => {
+    if (!message.member.voice.channel) return message.channel.send('Enter voice channel');
+    if (!serverQueue || serverQueue.song == []) return message.channel.send('Nothing to skip');
+
+    let totalTimeSec;
+    for (let i = 0; i < serverQueue.songs.length; i++) {
+        totalTimeSec += Number(serverQueue.songs[i].time);
+    }
+
+    let time = ``;
+    let timeMins = Math.floor(totalTimeSec / 60);
+    let timeHours = Math.floor(totalTimeSec / 60);
+    let timeSec = totalTimeSec - timeMins * 60;
+    if (timeSec < 10) { timeSec = '0' + String(timeSec) }
+    if (timeHours <= 0) { time = `${timeMins}:${timeSec}` } else { 
+        if (timeMins < 10) { timeMins = '0' + String(timeMins) }
+        time = `${timeHours}:${timeMins}:${timeSec}` 
+    }
+    
 }
 
 const skip = (message, serverQueue) => {
