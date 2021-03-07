@@ -467,7 +467,7 @@ const skipto = (message, serverQueue) => {
     let dest = Number(Math.abs(Math.floor(message.content.split(' ')[1]))) - 1;
     if (dest <= 0 || dest > serverQueue.songs.length) { return message.channel.send('Incorrect pointer'); }
 
-    let current = serverQueue.songs[0];
+    let current = serverQueue.songs[1];
     let to = serverQueue.songs[dest];
 
     serverQueue.songs.push(current);
