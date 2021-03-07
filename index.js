@@ -473,6 +473,7 @@ const time = (message, serverQueue) => {
         time = `${timeHours}:${timeMins}:${timeSec}` 
     }
     
+    message.channel.send(time);
 }
 
 const skip = (message, serverQueue) => {
