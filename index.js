@@ -460,7 +460,7 @@ const time = (message, serverQueue) => {
 
     let totalTimeSec;
     for (let i = 0; i < serverQueue.songs.length; i++) {
-        totalTimeSec += Number(serverQueue.songs[i].time);
+        totalTimeSec += parseInt(serverQueue.songs[i].time);
     }
 
     let time = ``;
