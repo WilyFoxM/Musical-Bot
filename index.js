@@ -1,23 +1,30 @@
 // Information
     // Spotify
     const SpotifyAPI = {
-        ID: '481c0a6c5f2d49e2bb4982faff8f8a5a',
-        Secret: 'dff096f24c38414481e8ca36f1079a38'
+        ID: process.env.SPID,
+        Secret: process.env.SPSECRET
     }
 
     // SoundCloud
-    let SCID = '8VYpK2wS7aOYHwRFi4wZE1P51Z00WaeR';
+    const SCID = process.env.SCID
 
     // YT API
-    let YTAPI = 'AIzaSyCYJnOa_DmV_n74WwG8RnNHH3bMZFyUN6k';
+    const YTAPI = process.env.YTAPI
 
     // Discord
-    let token = 'NjkwMTkyODM4MDc5NTQ1Mzk2.XnN2Kw.5ll-x9SuQ8fQV2UAT3hvTPPo_wU';
-    let prefix = '*';
+    const token = process.env.TOKEN;
+    const prefix = '*';
 
 //Bot client
 const Discord = require('discord.js');
 const bot = new Discord.Client();
+
+// Express Server
+const express = require('express');
+const app = express();
+const port = process.env.PORT;
+app.get('/', (req, res) => res.send('Working...'))
+
 
 // YTDL
 const ytdl = require('ytdl-core-discord');
@@ -629,4 +636,4 @@ const stop = (message, serverQueue) => {
     serverQueue.connection.dispatcher.end();
 }
 
-bot.login(token);
+app.listen(port, () => bot.login(token));
